@@ -104,13 +104,15 @@ app.post('/slack/action', urlencodedParser, function(req, res){
     var body = JSON.parse(req.body.payload)
     console.log(JSON.stringify(body));
 
-    var ackMsg = util.format('"text": "%s by %s"',
-      "Approved",
-      body.user.name
+    approveHistory[body.callback_id] = body.actions[0].value == "yes" ? "Approved" : "Denied";
+
+    var ackMsg = util.format('"text": "%s %s the request."',
+      body.user.name,
+      body.actions[0].value == "yes" ? "approved" : "denied"
     );
 
     var body = util.format('{"response_type": "ephemeral", "replace_original": true, "text": "%s", "attachments":[{%s}]}',
-      req.body.original_message.text, ackMsg);
+      body.original_message.text, ackMsg);
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end('{"response_type": "ephemeral", "replace_original": true, "text": "You have approved the request"}');
 });
