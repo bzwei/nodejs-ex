@@ -1,8 +1,12 @@
 //  OpenShift sample Node application
 var express = require('express'),
     app     = express(),
-    morgan  = require('morgan');
-    
+    morgan  = require('morgan'),
+    util    = require('util');
+
+
+if (typeof approveHistory === 'undefined') { global.approveHistory = {} };
+
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -91,6 +95,28 @@ app.get('/pagecount', function (req, res) {
     res.send('{ pageCount: -1 }');
   }
 });
+
+app.post('/slack/action', function(req, res){
+    console.log('POST /slac/action');
+    console.log(util.inspect(req.body, false , null));
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    var ackMsg = util.format('"text": "%s by %s"',
+      "Approved",
+      req.body.user.name
+    );
+
+    var body = util.format('{"response_type": "ephemeral", "replace_original": true, "text": "%s", "attachments":[{%s}]}',
+      req.body.original_message.text, ackMsg);
+    res.end('{"response_type": "ephemeral", "replace_original": true, "text": "You have approved the request"}');
+});
+
+app.get('/slack/approval', function(req, res)){
+  var reqId = req.query.requestId;
+  var appStatus = (reqId in approveHistory) ? approveHistory[reqId] : 'Unknown'
+  var body = util.format('{"requestId": "%s", "approvalStatus": "%s"', reqId, appStatus);
+  res.writeHead(200, {'Content-Type': 'application/json'});
+  res.end(body)
+}
 
 // error handling
 app.use(function(err, req, res, next){
