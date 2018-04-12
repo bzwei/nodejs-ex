@@ -4,6 +4,8 @@ var express = require('express'),
     morgan  = require('morgan'),
     util    = require('util');
 
+var bodyParser = require('body-parser')
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
 if (typeof approveHistory === 'undefined') { global.approveHistory = {} };
 
@@ -96,24 +98,27 @@ app.get('/pagecount', function (req, res) {
   }
 });
 
-app.post('/slack/action', function(req, res){
+app.post('/slack/action', urlencodedParser, function(req, res){
     console.log('POST /slac/action');
-    console.log(util.inspect(req.body, false , null));
-    res.writeHead(200, {'Content-Type': 'application/json'});
+
+    var body = JSON.parse(req.body.payload)
+    console.log(JSON.stringify(body));
+
     var ackMsg = util.format('"text": "%s by %s"',
       "Approved",
-      req.body.user.name
+      body.user.name
     );
 
     var body = util.format('{"response_type": "ephemeral", "replace_original": true, "text": "%s", "attachments":[{%s}]}',
       req.body.original_message.text, ackMsg);
+    res.writeHead(200, {'Content-Type': 'application/json'});
     res.end('{"response_type": "ephemeral", "replace_original": true, "text": "You have approved the request"}');
 });
 
 app.get('/slack/approval', function(req, res){
   var reqId = req.query.requestId;
   var appStatus = (reqId in approveHistory) ? approveHistory[reqId] : 'Unknown'
-  var body = util.format('{"requestId": "%s", "approvalStatus": "%s"', reqId, appStatus);
+  var body = util.format('{"requestId": "%s", "approvalStatus": "%s"};', reqId, appStatus);
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.end(body)
 });
