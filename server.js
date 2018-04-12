@@ -114,7 +114,7 @@ app.post('/slack/action', urlencodedParser, function(req, res){
     var body = util.format('{"response_type": "ephemeral", "replace_original": true, "text": "%s", "attachments":[{%s}]}',
       body.original_message.text, ackMsg);
     res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end('{"response_type": "ephemeral", "replace_original": true, "text": "You have approved the request"}');
+    res.end(body);
 });
 
 app.get('/slack/approval', function(req, res){
