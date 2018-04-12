@@ -110,13 +110,13 @@ app.post('/slack/action', function(req, res){
     res.end('{"response_type": "ephemeral", "replace_original": true, "text": "You have approved the request"}');
 });
 
-app.get('/slack/approval', function(req, res)){
+app.get('/slack/approval', function(req, res){
   var reqId = req.query.requestId;
   var appStatus = (reqId in approveHistory) ? approveHistory[reqId] : 'Unknown'
   var body = util.format('{"requestId": "%s", "approvalStatus": "%s"', reqId, appStatus);
   res.writeHead(200, {'Content-Type': 'application/json'});
   res.end(body)
-}
+});
 
 // error handling
 app.use(function(err, req, res, next){
